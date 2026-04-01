@@ -1,4 +1,3 @@
-const { describe, it, expect } = require("vitest");
 const { compareVersions } = require("../../services/softwareService");
 const { normalizeDriverRecord } = require("../../services/driverService");
 
@@ -19,5 +18,15 @@ describe("diagnostics normalization", () => {
     expect(item.deviceName).toBe("GPU A");
     expect(item.provider).toBe("Vendor");
     expect(item.version).toBe("1.2.3");
+  });
+
+  it("handles invalid driver date safely", () => {
+    const item = normalizeDriverRecord({
+      DeviceName: "Device B",
+      DriverProviderName: "Vendor",
+      DriverVersion: "9.9.9",
+      DriverDate: "invalid-date-value"
+    });
+    expect(item.date).toBe(null);
   });
 });

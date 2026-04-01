@@ -79,7 +79,12 @@ async function estimateTempFilesSize() {
     if (!fs.existsSync(dir)) {
       continue;
     }
-    const entries = fs.readdirSync(dir);
+    let entries = [];
+    try {
+      entries = fs.readdirSync(dir);
+    } catch (_error) {
+      continue;
+    }
     for (const name of entries.slice(0, 1500)) {
       const fullPath = path.join(dir, name);
       try {

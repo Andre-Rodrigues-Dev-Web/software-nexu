@@ -1,4 +1,3 @@
-const { describe, it, expect } = require("vitest");
 const { classifyRisk } = require("../../services/securityService");
 
 describe("securityService", () => {

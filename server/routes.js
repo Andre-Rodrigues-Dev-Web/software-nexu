@@ -2,7 +2,7 @@ const { analyzePerformance } = require("../services/performanceService");
 const { buildCleanupCandidates, estimateCleanup, executeCleanup } = require("../services/cleanupService");
 const { runSecurityDiagnostics } = require("../services/securityService");
 const { getDriverDiagnostics } = require("../services/driverService");
-const { getSoftwareDiagnostics } = require("../services/softwareService");
+const { getSoftwareDiagnostics, processSoftwareUpdates } = require("../services/softwareService");
 const { requireConfirmation, ensureArray, ensureObject } = require("../services/validationService");
 const { getRamUsage, estimateDiskUsage, estimateTempFilesSize, getStartupAppsCount, getCpuUsageEstimate } = require("../services/systemInfoService");
 const { logAction, getHistory, exportCsv, exportPdf, saveSystemSnapshot } = require("../services/historyService");
@@ -22,7 +22,7 @@ function routeGuard(handler) {
 
 function attachRoutes(app) {
   app.get("/api/dashboard/summary", routeGuard(async (_req, res) => {
-    const [cpuUsage, ram, disk, startupAppsCount, tempFilesBytes, security, drivers, software] = await Promise.all([
+    const results = await Promise.allSettled([
       getCpuUsageEstimate(),
       Promise.resolve(getRamUsage()),
       Promise.resolve(estimateDiskUsage()),
@@ -32,6 +32,15 @@ function attachRoutes(app) {
       getDriverDiagnostics(),
       getSoftwareDiagnostics()
     ]);
+    const getValue = (index, fallback) => (results[index].status === "fulfilled" ? results[index].value : fallback);
+    const cpuUsage = getValue(0, 0);
+    const ram = getValue(1, { usagePercent: 0 });
+    const disk = getValue(2, { usagePercent: 0 });
+    const startupAppsCount = getValue(3, 0);
+    const tempFilesBytes = getValue(4, 0);
+    const security = getValue(5, { defenderStatus: "unknown" });
+    const drivers = getValue(6, { outdatedCount: 0 });
+    const software = getValue(7, { outdatedCount: 0 });
     const snapshot = {
       cpu_usage: cpuUsage,
       ram_usage: ram.usagePercent,
@@ -118,6 +127,36 @@ function attachRoutes(app) {
     getDb().prepare("INSERT INTO software_update_reports(apps_json, outdated_count, source) VALUES (?, ?, ?)").run(JSON.stringify(report.items), report.outdatedCount, report.source);
     logAction("software", "software_check", { outdatedCount: report.outdatedCount }, { severity: "info" });
     res.json(report);
+  }));
+
+  app.post("/api/software/update-selected", routeGuard(async (req, res) => {
+    ensureObject(req.body, "body");
+    ensureArray(req.body.selectedItems, "selectedItems");
+    requireConfirmation(req.body, "Software updates require explicit confirmation.");
+    const selectedItems = req.body.selectedItems
+      .filter((item) => item && typeof item === "object")
+      .map((item) => ({
+        id: String(item.id || ""),
+        name: String(item.name || "Unknown App"),
+        outdated: Boolean(item.outdated)
+      }))
+      .filter((item) => item.id);
+    const results = await processSoftwareUpdates(selectedItems);
+    const successCount = results.filter((item) => item.status === "updated").length;
+    const failureCount = results.filter((item) => item.status === "failed").length;
+    logAction(
+      "software",
+      "update_selected",
+      { selectedCount: selectedItems.length, successCount, failureCount },
+      { severity: failureCount ? "warning" : "info", requiresConfirmation: true, confirmedByUser: true }
+    );
+    res.json({
+      success: true,
+      total: selectedItems.length,
+      successCount,
+      failureCount,
+      results
+    });
   }));
 
   app.get("/api/history", routeGuard(async (req, res) => {

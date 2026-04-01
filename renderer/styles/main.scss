@@ -151,6 +151,72 @@ td {
   color: var(--warn);
 }
 
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-pill--updated {
+  background: rgba(52, 211, 153, 0.2);
+  color: #86efac;
+}
+
+.status-pill--outdated {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.progress-wrap {
+  margin: 0.8rem 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: #1e2f4d;
+  overflow: hidden;
+  border: 1px solid #2d486f;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #22d3ee, #34d399);
+  transition: width 0.2s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  display: grid;
+  place-items: center;
+  z-index: 40;
+  padding: 1rem;
+}
+
+.modal__card {
+  width: min(540px, 100%);
+  background: #111c34;
+  border: 1px solid #28486f;
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+#softwareReport table td:first-child,
+#softwareReport table th:first-child {
+  width: 42px;
+}
+
 .toast {
   position: fixed;
   right: 20px;
@@ -190,5 +256,8 @@ td {
   .sidebar {
     border-right: none;
     border-bottom: 1px solid #22395c;
+  }
+  #softwareSearchInput {
+    width: 100%;
   }
 }

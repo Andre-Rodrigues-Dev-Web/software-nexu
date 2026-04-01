@@ -1,5 +1,11 @@
 const { executePowerShell } = require("./windowsCommandService");
 
+function buildSoftwareId(app) {
+  const name = String(app.DisplayName || app.name || "unknown").toLowerCase();
+  const publisher = String(app.Publisher || app.publisher || "unknown").toLowerCase();
+  return `${name}::${publisher}`.replace(/\s+/g, "-");
+}
+
 function compareVersions(installed, latest) {
   const a = String(installed || "0").split(".").map(Number);
   const b = String(latest || "0").split(".").map(Number);
@@ -20,13 +26,16 @@ function compareVersions(installed, latest) {
 function normalizeSoftwareRecord(app) {
   const sampleLatest = app.DisplayVersion && app.DisplayVersion.includes(".") ? app.DisplayVersion : "1.0.0";
   const latestKnownVersion = sampleLatest.split(".").map((part, idx) => (idx === 0 ? String(Number(part) + 1) : part)).join(".");
+  const outdated = compareVersions(app.DisplayVersion, latestKnownVersion) < 0;
   return {
+    id: buildSoftwareId(app),
     name: app.DisplayName || "Unknown App",
     installedVersion: app.DisplayVersion || "Unknown",
     latestKnownVersion,
     publisher: app.Publisher || "Unknown",
     updateSource: "Official vendor channel",
-    outdated: compareVersions(app.DisplayVersion, latestKnownVersion) < 0
+    outdated,
+    statusText: outdated ? "Update available" : "Up to date"
   };
 }
 
@@ -49,8 +58,47 @@ async function getSoftwareDiagnostics() {
   };
 }
 
+async function attemptWingetUpgrade(name) {
+  const checkWinget = await executePowerShell("Get-Command winget -ErrorAction SilentlyContinue | Select-Object Name | ConvertTo-Json");
+  if (!checkWinget.ok || !checkWinget.output.trim()) {
+    return { success: false, message: "Winget is not available on this machine." };
+  }
+  const escapedName = String(name || "").replaceAll('"', "'");
+  const command = `winget upgrade --name "${escapedName}" --source winget --accept-source-agreements --accept-package-agreements`;
+  const result = await executePowerShell(command);
+  if (!result.ok) {
+    return { success: false, message: "Automatic update could not be completed. Use the official updater for this software." };
+  }
+  return { success: true, message: "Update command executed through winget." };
+}
+
+async function processSoftwareUpdates(selectedItems) {
+  const results = [];
+  for (const item of selectedItems) {
+    if (!item.outdated) {
+      results.push({
+        id: item.id,
+        name: item.name,
+        status: "skipped",
+        message: "Software is already up to date."
+      });
+      continue;
+    }
+    const updateResult = await attemptWingetUpgrade(item.name);
+    results.push({
+      id: item.id,
+      name: item.name,
+      status: updateResult.success ? "updated" : "failed",
+      message: updateResult.message
+    });
+  }
+  return results;
+}
+
 module.exports = {
   compareVersions,
   normalizeSoftwareRecord,
-  getSoftwareDiagnostics
+  getSoftwareDiagnostics,
+  buildSoftwareId,
+  processSoftwareUpdates
 };

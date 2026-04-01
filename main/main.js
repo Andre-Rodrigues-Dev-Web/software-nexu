@@ -32,7 +32,18 @@ async function createMainWindow() {
   });
 }
 
-app.whenReady().then(createMainWindow);
+function handleFatalError(error) {
+  console.error("Velance startup error:", error);
+  if (serverHandle) {
+    serverHandle.close();
+  }
+  app.quit();
+}
+
+process.on("unhandledRejection", handleFatalError);
+process.on("uncaughtException", handleFatalError);
+
+app.whenReady().then(createMainWindow).catch(handleFatalError);
 
 app.on("window-all-closed", () => {
   if (serverHandle) {
@@ -45,6 +56,6 @@ app.on("window-all-closed", () => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createMainWindow();
+    createMainWindow().catch(handleFatalError);
   }
 });

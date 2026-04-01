@@ -1,4 +1,3 @@
-const { describe, it, expect } = require("vitest");
 const { normalizeTarget, estimateCleanup } = require("../../services/cleanupService");
 
 describe("cleanupService", () => {

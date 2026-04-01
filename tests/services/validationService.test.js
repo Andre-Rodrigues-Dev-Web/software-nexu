@@ -1,4 +1,3 @@
-const { describe, it, expect } = require("vitest");
 const { requireConfirmation, ensureArray, ensureObject } = require("../../services/validationService");
 
 describe("validationService", () => {

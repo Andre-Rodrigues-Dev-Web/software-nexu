@@ -5,10 +5,12 @@
   "main": "main/main.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "npm run build:css && electron .",
+    "dev": "npm run rebuild:electron && npm run build:css && electron .",
     "build:css": "sass renderer/styles/main.scss renderer/styles/main.css --no-source-map",
     "watch:css": "sass --watch renderer/styles/main.scss renderer/styles/main.css --no-source-map",
-    "start": "electron .",
+    "start": "npm run rebuild:electron && electron .",
+    "rebuild:electron": "cross-env npm_config_devdir=./.electron-gyp electron-rebuild -f -w better-sqlite3",
+    "rebuild:node": "npm rebuild better-sqlite3",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -22,13 +24,16 @@
   "author": "Velance",
   "license": "MIT",
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
+    "better-sqlite3": "^11.10.0",
     "cors": "^2.8.5",
     "electron-store": "^10.0.1",
     "express": "^4.21.2",
     "pdfkit": "^0.16.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.7.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "cross-env": "^7.0.3",
     "electron": "^31.7.7",
     "sass": "^1.89.2",
     "supertest": "^7.1.4",

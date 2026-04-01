@@ -78,7 +78,31 @@
         <section id="software" class="page">
           <div class="panel">
             <h3>Software update assistance</h3>
-            <button id="runSoftwareCheckBtn">Check installed software</button>
+            <div class="row">
+              <button id="runSoftwareCheckBtn">Check installed software</button>
+              <input id="softwareSearchInput" type="search" placeholder="Filter by software name..." />
+              <select id="softwareStatusFilter">
+                <option value="all">All status</option>
+                <option value="outdated">Update available</option>
+                <option value="updated">Up to date</option>
+              </select>
+              <select id="softwareSortSelect">
+                <option value="name-asc">Sort: Name A-Z</option>
+                <option value="name-desc">Sort: Name Z-A</option>
+                <option value="status">Sort: Needs update first</option>
+              </select>
+            </div>
+            <div class="row">
+              <button id="selectVisibleSoftwareBtn">Select visible</button>
+              <button id="clearSoftwareSelectionBtn">Clear selection</button>
+              <button id="updateSoftwareBtn" disabled>Atualizar Software</button>
+            </div>
+            <div id="softwareProgressWrap" class="progress-wrap hidden" aria-live="polite">
+              <p id="softwareProgressLabel">Updating selected software...</p>
+              <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div id="softwareProgressFill" class="progress-fill"></div>
+              </div>
+            </div>
             <div id="softwareReport"></div>
           </div>
         </section>
@@ -149,6 +173,16 @@
           </div>
         </section>
       </main>
+    </div>
+    <div id="softwareConfirmModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="softwareModalTitle">
+      <div class="modal__card">
+        <h3 id="softwareModalTitle">Confirm software updates</h3>
+        <p id="softwareModalText"></p>
+        <div class="row">
+          <button id="cancelSoftwareUpdateBtn">Cancel</button>
+          <button id="confirmSoftwareUpdateBtn">Confirm update</button>
+        </div>
+      </div>
     </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./js/app.js"></script>

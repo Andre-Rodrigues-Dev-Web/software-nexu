@@ -57,6 +57,8 @@ npm install
 npm run dev
 ```
 
+The start scripts rebuild native modules for Electron automatically before opening the app.
+
 ## Build SCSS
 
 ```bash
@@ -72,6 +74,23 @@ npm run test:coverage
 ```
 
 The test suite mocks or isolates side effects where practical and focuses on service logic, validations, normalization, repository behavior, and Express controller behavior.
+
+If you need to run tests after Electron rebuilds native modules, rebuild for Node runtime manually:
+
+```bash
+npm run rebuild:node
+```
+
+## Native Module Troubleshooting (better-sqlite3 ABI mismatch)
+
+If you see `NODE_MODULE_VERSION` mismatch errors between Node and Electron:
+
+```bash
+Get-Process node,electron -ErrorAction SilentlyContinue | Stop-Process -Force
+npm run rebuild:electron
+```
+
+This rebuilds `better-sqlite3` for the Electron runtime used by this project.
 
 ## Windows Commands and Fallback Handling
 

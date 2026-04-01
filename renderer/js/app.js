@@ -1,5 +1,13 @@
 const API = window.velance.getApiBaseUrl();
 const chartPoints = [];
+const softwareState = {
+  items: [],
+  selectedIds: new Set(),
+  searchText: "",
+  statusFilter: "all",
+  sortBy: "name-asc",
+  updating: false
+};
 
 function toast(message) {
   const node = document.getElementById("toast");
@@ -91,6 +99,15 @@ function renderTable(containerId, headers, rows) {
   document.getElementById(containerId).innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 async function loadPerformance() {
   const report = await apiGet("/performance/analyze");
   const findings = report.findings.map((f) => `<li>${f.label}: ${f.value} (${f.severity}) — ${f.recommendedAction}</li>`).join("");
@@ -115,8 +132,137 @@ async function loadDrivers() {
 
 async function loadSoftware() {
   const report = await apiGet("/software/check");
-  const rows = report.items.slice(0, 80).map((i) => [i.name, i.installedVersion, i.latestKnownVersion, i.publisher, i.outdated ? "Yes" : "No"]);
-  renderTable("softwareReport", ["Software", "Installed", "Latest", "Publisher", "Outdated"], rows);
+  softwareState.items = report.items || [];
+  const availableIds = new Set(softwareState.items.map((item) => item.id));
+  softwareState.selectedIds = new Set(Array.from(softwareState.selectedIds).filter((id) => availableIds.has(id)));
+  renderSoftwareTable();
+}
+
+function getFilteredAndSortedSoftwareItems() {
+  const text = softwareState.searchText.trim().toLowerCase();
+  const filtered = softwareState.items.filter((item) => {
+    const matchesText = !text || item.name.toLowerCase().includes(text) || String(item.publisher || "").toLowerCase().includes(text);
+    const matchesStatus = softwareState.statusFilter === "all"
+      || (softwareState.statusFilter === "outdated" && item.outdated)
+      || (softwareState.statusFilter === "updated" && !item.outdated);
+    return matchesText && matchesStatus;
+  });
+  if (softwareState.sortBy === "name-asc") {
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (softwareState.sortBy === "name-desc") {
+    filtered.sort((a, b) => b.name.localeCompare(a.name));
+  } else {
+    filtered.sort((a, b) => Number(b.outdated) - Number(a.outdated) || a.name.localeCompare(b.name));
+  }
+  return filtered;
+}
+
+function updateSoftwareActionButton() {
+  const selectedCount = softwareState.selectedIds.size;
+  const button = document.getElementById("updateSoftwareBtn");
+  button.disabled = selectedCount === 0 || softwareState.updating;
+  button.textContent = selectedCount > 0 ? `Atualizar Software (${selectedCount})` : "Atualizar Software";
+}
+
+function renderSoftwareTable() {
+  const rows = getFilteredAndSortedSoftwareItems();
+  const body = rows.map((item) => {
+    const checked = softwareState.selectedIds.has(item.id) ? "checked" : "";
+    const statusClass = item.outdated ? "status-pill--outdated" : "status-pill--updated";
+    const statusText = item.outdated ? "Atualização disponível" : "Atualizado";
+    return `
+      <tr>
+        <td><input type="checkbox" class="software-select" value="${escapeHtml(item.id)}" ${checked} aria-label="Selecionar ${escapeHtml(item.name)}" /></td>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.installedVersion)}</td>
+        <td>${escapeHtml(item.latestKnownVersion)}</td>
+        <td>${escapeHtml(item.publisher)}</td>
+        <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+      </tr>
+    `;
+  }).join("");
+  const table = `
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Software</th>
+          <th>Installed</th>
+          <th>Latest</th>
+          <th>Publisher</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>${body || "<tr><td colspan='6'>No software found.</td></tr>"}</tbody>
+    </table>
+  `;
+  document.getElementById("softwareReport").innerHTML = table;
+  updateSoftwareActionButton();
+}
+
+function setSoftwareProgress(percent, label) {
+  const wrap = document.getElementById("softwareProgressWrap");
+  const fill = document.getElementById("softwareProgressFill");
+  const bar = wrap.querySelector(".progress-bar");
+  const labelNode = document.getElementById("softwareProgressLabel");
+  wrap.classList.remove("hidden");
+  fill.style.width = `${percent}%`;
+  bar.setAttribute("aria-valuenow", String(percent));
+  labelNode.textContent = label;
+}
+
+function hideSoftwareProgress() {
+  document.getElementById("softwareProgressWrap").classList.add("hidden");
+}
+
+function openSoftwareModal(count) {
+  document.getElementById("softwareModalText").textContent = `Você selecionou ${count} software(s). Deseja iniciar a atualização agora?`;
+  document.getElementById("softwareConfirmModal").classList.remove("hidden");
+}
+
+function closeSoftwareModal() {
+  document.getElementById("softwareConfirmModal").classList.add("hidden");
+}
+
+async function runSoftwareUpdates() {
+  const selectedItems = softwareState.items.filter((item) => softwareState.selectedIds.has(item.id));
+  if (!selectedItems.length) {
+    toast("Selecione ao menos um software.");
+    return;
+  }
+  softwareState.updating = true;
+  updateSoftwareActionButton();
+  closeSoftwareModal();
+  let successCount = 0;
+  let failureCount = 0;
+  for (let i = 0; i < selectedItems.length; i += 1) {
+    const item = selectedItems[i];
+    setSoftwareProgress(Math.round((i / selectedItems.length) * 100), `Atualizando ${item.name}...`);
+    try {
+      const response = await apiPost("/software/update-selected", {
+        selectedItems: [item],
+        confirmed: true
+      });
+      const result = response.results[0];
+      if (result && result.status === "updated") {
+        successCount += 1;
+        const index = softwareState.items.findIndex((software) => software.id === item.id);
+        if (index >= 0) {
+          softwareState.items[index].outdated = false;
+          softwareState.items[index].statusText = "Up to date";
+        }
+      } else if (result && result.status === "failed") {
+        failureCount += 1;
+      }
+    } catch (_error) {
+      failureCount += 1;
+    }
+  }
+  setSoftwareProgress(100, "Atualização finalizada.");
+  softwareState.updating = false;
+  renderSoftwareTable();
+  setTimeout(hideSoftwareProgress, 900);
+  toast(failureCount ? `Atualização concluída com falhas. Sucesso: ${successCount}, falhas: ${failureCount}` : `Atualização concluída com sucesso. Total: ${successCount}`);
 }
 
 async function loadCleanupTargets() {
@@ -175,6 +321,47 @@ function wireEvents() {
   document.getElementById("runSecurityScanBtn").addEventListener("click", () => loadSecurity().catch((e) => toast(e.message)));
   document.getElementById("runDriverCheckBtn").addEventListener("click", () => loadDrivers().catch((e) => toast(e.message)));
   document.getElementById("runSoftwareCheckBtn").addEventListener("click", () => loadSoftware().catch((e) => toast(e.message)));
+  document.getElementById("softwareSearchInput").addEventListener("input", (event) => {
+    softwareState.searchText = event.target.value;
+    renderSoftwareTable();
+  });
+  document.getElementById("softwareStatusFilter").addEventListener("change", (event) => {
+    softwareState.statusFilter = event.target.value;
+    renderSoftwareTable();
+  });
+  document.getElementById("softwareSortSelect").addEventListener("change", (event) => {
+    softwareState.sortBy = event.target.value;
+    renderSoftwareTable();
+  });
+  document.getElementById("softwareReport").addEventListener("change", (event) => {
+    if (!event.target.classList.contains("software-select")) {
+      return;
+    }
+    const softwareId = event.target.value;
+    if (event.target.checked) {
+      softwareState.selectedIds.add(softwareId);
+    } else {
+      softwareState.selectedIds.delete(softwareId);
+    }
+    updateSoftwareActionButton();
+  });
+  document.getElementById("selectVisibleSoftwareBtn").addEventListener("click", () => {
+    getFilteredAndSortedSoftwareItems().forEach((item) => softwareState.selectedIds.add(item.id));
+    renderSoftwareTable();
+  });
+  document.getElementById("clearSoftwareSelectionBtn").addEventListener("click", () => {
+    softwareState.selectedIds.clear();
+    renderSoftwareTable();
+  });
+  document.getElementById("updateSoftwareBtn").addEventListener("click", () => {
+    if (!softwareState.selectedIds.size) {
+      toast("Selecione ao menos um software.");
+      return;
+    }
+    openSoftwareModal(softwareState.selectedIds.size);
+  });
+  document.getElementById("cancelSoftwareUpdateBtn").addEventListener("click", closeSoftwareModal);
+  document.getElementById("confirmSoftwareUpdateBtn").addEventListener("click", () => runSoftwareUpdates().catch((e) => toast(e.message)));
   document.getElementById("loadCleanupTargetsBtn").addEventListener("click", () => loadCleanupTargets().catch((e) => toast(e.message)));
   document.getElementById("previewCleanupBtn").addEventListener("click", () => previewCleanup().catch((e) => toast(e.message)));
   document.getElementById("runCleanupBtn").addEventListener("click", () => runCleanup().catch((e) => toast(e.message)));

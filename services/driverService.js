@@ -2,7 +2,8 @@ const { executePowerShell } = require("./windowsCommandService");
 
 function normalizeDriverRecord(row) {
   const provider = row.DriverProviderName || "Unknown";
-  const date = row.DriverDate ? new Date(row.DriverDate).toISOString().slice(0, 10) : null;
+  const parsedDate = row.DriverDate ? new Date(row.DriverDate) : null;
+  const date = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString().slice(0, 10) : null;
   const version = row.DriverVersion || "Unknown";
   const outdated = provider !== "Microsoft" && date && Number(date.slice(0, 4)) < new Date().getFullYear() - 2;
   return {

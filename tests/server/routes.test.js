@@ -1,6 +1,5 @@
 const express = require("express");
 const request = require("supertest");
-const { describe, it, expect } = require("vitest");
 const { attachRoutes } = require("../../server/routes");
 
 function makeApp() {
