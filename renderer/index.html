@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Velance System Care</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div id="splash" class="splash" aria-live="polite">
+      <div class="splash__brand">
+        <h1>Velance System Care</h1>
+        <p>Preparing secure diagnostics...</p>
+      </div>
+    </div>
+    <div class="app-layout">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand__logo">VS</div>
+          <div>
+            <h1>Velance</h1>
+            <p>System Care</p>
+          </div>
+        </div>
+        <nav>
+          <button data-page="dashboard" class="nav-btn is-active">Dashboard</button>
+          <button data-page="performance" class="nav-btn">Performance Analyzer</button>
+          <button data-page="security" class="nav-btn">Security Center</button>
+          <button data-page="drivers" class="nav-btn">Driver Center</button>
+          <button data-page="software" class="nav-btn">Software Updates</button>
+          <button data-page="cleanup" class="nav-btn">Cleanup Center</button>
+          <button data-page="history" class="nav-btn">Reports / History</button>
+          <button data-page="settings" class="nav-btn">Settings</button>
+          <button data-page="about" class="nav-btn">About</button>
+        </nav>
+      </aside>
+      <main class="content">
+        <header class="topbar">
+          <h2 id="pageTitle">Dashboard</h2>
+          <span id="securityBadge" class="badge">Security: Loading</span>
+        </header>
+        <section id="dashboard" class="page is-active">
+          <div class="grid cards" id="summaryCards"></div>
+          <div class="quick-actions">
+            <button id="analyzeBtn">Analyze system</button>
+            <button id="quickCleanupBtn">Clean temporary files</button>
+            <button id="checkSecurityBtn">Check security</button>
+            <button id="checkSoftwareBtn">Check software updates</button>
+            <button id="checkDriversBtn">Check drivers</button>
+          </div>
+          <div class="panel">
+            <h3>Usage history</h3>
+            <canvas id="usageChart" width="900" height="220" aria-label="Resource usage chart"></canvas>
+          </div>
+        </section>
+        <section id="performance" class="page">
+          <div class="panel">
+            <h3>Performance report</h3>
+            <button id="runPerformanceScanBtn">Run analysis</button>
+            <div id="performanceReport"></div>
+          </div>
+        </section>
+        <section id="security" class="page">
+          <div class="panel">
+            <h3>Security center</h3>
+            <button id="runSecurityScanBtn">Run defensive scan</button>
+            <div id="securityReport"></div>
+          </div>
+        </section>
+        <section id="drivers" class="page">
+          <div class="panel">
+            <h3>Driver diagnostics</h3>
+            <button id="runDriverCheckBtn">Check drivers</button>
+            <p class="alert">Always create a restore point before applying driver updates.</p>
+            <div id="driverReport"></div>
+          </div>
+        </section>
+        <section id="software" class="page">
+          <div class="panel">
+            <h3>Software update assistance</h3>
+            <button id="runSoftwareCheckBtn">Check installed software</button>
+            <div id="softwareReport"></div>
+          </div>
+        </section>
+        <section id="cleanup" class="page">
+          <div class="panel">
+            <h3>Cleanup center</h3>
+            <button id="loadCleanupTargetsBtn">Load cleanup targets</button>
+            <form id="cleanupForm"></form>
+            <button id="previewCleanupBtn">Preview cleanup</button>
+            <button id="runCleanupBtn">Run selected cleanup</button>
+            <div id="cleanupReport"></div>
+          </div>
+        </section>
+        <section id="history" class="page">
+          <div class="panel">
+            <h3>Maintenance history</h3>
+            <div class="row">
+              <input id="historyFromDate" type="date" />
+              <select id="historyModule">
+                <option value="">All modules</option>
+                <option value="dashboard">Dashboard</option>
+                <option value="performance">Performance</option>
+                <option value="security">Security</option>
+                <option value="cleanup">Cleanup</option>
+                <option value="drivers">Drivers</option>
+                <option value="software">Software</option>
+                <option value="settings">Settings</option>
+              </select>
+              <button id="loadHistoryBtn">Load history</button>
+              <button id="exportCsvBtn">Export CSV</button>
+              <button id="exportPdfBtn">Export PDF</button>
+            </div>
+            <div id="historyTable"></div>
+          </div>
+        </section>
+        <section id="settings" class="page">
+          <div class="panel">
+            <h3>Settings</h3>
+            <form id="settingsForm">
+              <label>Theme
+                <select name="theme">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </label>
+              <label>Cleanup recycle bin by default
+                <select name="cleanup.recycleBinEnabled">
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </label>
+              <label>Require admin confirmation for critical actions
+                <select name="critical.requireAdminConfirmation">
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </label>
+              <button type="submit">Save settings</button>
+            </form>
+          </div>
+        </section>
+        <section id="about" class="page">
+          <div class="panel">
+            <h3>About Velance System Care</h3>
+            <p>Professional defensive maintenance utility for transparent diagnostics and optimization workflows.</p>
+            <p>TODO: Integrate official vendor feeds for advanced software version intelligence.</p>
+            <p>TODO: Integrate optional trusted antivirus vendor CLI adapters when installed.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./js/app.js"></script>
+  </body>
+</html>

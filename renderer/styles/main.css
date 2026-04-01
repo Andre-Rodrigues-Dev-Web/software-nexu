@@ -1,0 +1,42 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111c34;
+  --panel-2: #16233f;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --success: #34d399;
+  --warn: #f59e0b;
+  --danger: #f87171;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+button, input, select { font: inherit; }
+button { border: 1px solid #244066; background: #1a2a4b; color: var(--text); border-radius: 8px; padding: 0.55rem 0.9rem; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+.sidebar { background: #0c1529; padding: 1rem; border-right: 1px solid #22395c; }
+.brand { display: flex; gap: 0.7rem; align-items: center; margin-bottom: 1rem; }
+.brand__logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(145deg, #0ea5e9, #2563eb); display: grid; place-items: center; font-weight: 700; }
+.nav-btn { display: block; width: 100%; text-align: left; margin-bottom: 0.45rem; }
+.nav-btn.is-active { background: #1f3f66; }
+.content { padding: 1rem 1.2rem; }
+.topbar { display: flex; justify-content: space-between; align-items: center; }
+.badge { background: #1d3557; padding: 0.25rem 0.5rem; border-radius: 999px; }
+.grid.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+.card, .panel { background: var(--panel); border: 1px solid #243958; border-radius: 12px; padding: 0.9rem; }
+.quick-actions { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.page { display: none; }
+.page.is-active { display: block; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #2a4164; padding: 0.45rem; text-align: left; }
+.row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.alert { color: var(--warn); }
+.toast { position: fixed; right: 20px; bottom: 20px; min-width: 220px; background: #1e293b; border: 1px solid #334155; padding: 0.8rem; border-radius: 10px; opacity: 0; transform: translateY(6px); transition: 0.2s; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.splash { position: fixed; inset: 0; background: radial-gradient(circle at 20% 20%, #10284b, #090f1f); display: grid; place-items: center; z-index: 20; }
+.splash.hide { display: none; }
+@media (max-width: 1150px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid #22395c; }
+}

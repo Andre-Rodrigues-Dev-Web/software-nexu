@@ -1,0 +1,37 @@
+{
+  "name": "velance-system-care",
+  "version": "1.0.0",
+  "description": "Professional Windows maintenance and optimization desktop utility.",
+  "main": "main/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "npm run build:css && electron .",
+    "build:css": "sass renderer/styles/main.scss renderer/styles/main.css --no-source-map",
+    "watch:css": "sass --watch renderer/styles/main.scss renderer/styles/main.css --no-source-map",
+    "start": "electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "electron",
+    "maintenance",
+    "windows",
+    "security"
+  ],
+  "author": "Velance",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "electron-store": "^10.0.1",
+    "express": "^4.21.2",
+    "pdfkit": "^0.16.0"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "sass": "^1.89.2",
+    "supertest": "^7.1.4",
+    "vitest": "^3.2.4"
+  }
+}
