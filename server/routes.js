@@ -1,8 +1,18 @@
 const { analyzePerformance } = require("../services/performanceService");
 const { buildCleanupCandidates, estimateCleanup, executeCleanup } = require("../services/cleanupService");
 const { runSecurityDiagnostics } = require("../services/securityService");
-const { getDriverDiagnostics } = require("../services/driverService");
+const { getDriverDiagnostics, checkInternetConnection, updateSingleDriver } = require("../services/driverService");
 const { getSoftwareDiagnostics, processSoftwareUpdates } = require("../services/softwareService");
+const {
+  measureApiResponseTimes,
+  getMemoryConsumption,
+  getBundleSizeAnalysis,
+  buildOptimizationSuggestions,
+  compareWithPrevious,
+  persistPerformanceReport,
+  listPerformanceReports,
+  exportPerformanceReportsCsv
+} = require("../services/performanceDiagnosticsService");
 const { requireConfirmation, ensureArray, ensureObject } = require("../services/validationService");
 const { getRamUsage, estimateDiskUsage, estimateTempFilesSize, getStartupAppsCount, getCpuUsageEstimate } = require("../services/systemInfoService");
 const { logAction, getHistory, exportCsv, exportPdf, saveSystemSnapshot } = require("../services/historyService");
@@ -67,6 +77,59 @@ function attachRoutes(app) {
     res.json(report);
   }));
 
+  app.get("/api/performance/api-response", routeGuard(async (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}/api`;
+    const endpoints = ["/dashboard/summary", "/performance/analyze", "/drivers/check", "/software/check"];
+    const apiResponseTimes = await measureApiResponseTimes(baseUrl, endpoints);
+    res.json({ apiResponseTimes });
+  }));
+
+  app.get("/api/performance/memory", routeGuard(async (_req, res) => {
+    res.json({ memory: getMemoryConsumption() });
+  }));
+
+  app.get("/api/performance/bundle", routeGuard(async (_req, res) => {
+    res.json({ bundle: getBundleSizeAnalysis() });
+  }));
+
+  app.post("/api/performance/full-report", routeGuard(async (req, res) => {
+    ensureObject(req.body, "body");
+    const baseUrl = `${req.protocol}://${req.get("host")}/api`;
+    const endpoints = ["/dashboard/summary", "/performance/analyze", "/drivers/check", "/software/check"];
+    const apiResponseTimes = await measureApiResponseTimes(baseUrl, endpoints);
+    const memory = getMemoryConsumption();
+    const bundle = getBundleSizeAnalysis();
+    const history = listPerformanceReports(1);
+    const previous = history.length ? history[0].report : null;
+    const report = {
+      apiResponseTimes,
+      memory,
+      bundle,
+      renderer: req.body.renderer || {},
+      generatedAt: new Date().toISOString()
+    };
+    const comparison = compareWithPrevious(report, previous);
+    const suggestions = buildOptimizationSuggestions(report);
+    const finalReport = {
+      ...report,
+      comparison,
+      suggestions
+    };
+    persistPerformanceReport(finalReport);
+    logAction("performance", "full_report", { alerts: comparison.alerts.length }, { severity: comparison.hasDegradation ? "warning" : "info" });
+    res.json(finalReport);
+  }));
+
+  app.get("/api/performance/history", routeGuard(async (_req, res) => {
+    res.json({ items: listPerformanceReports(40) });
+  }));
+
+  app.get("/api/performance/export/csv", routeGuard(async (_req, res) => {
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=velance-performance.csv");
+    res.send(exportPerformanceReportsCsv());
+  }));
+
   app.get("/api/cleanup/candidates", routeGuard(async (_req, res) => {
     const candidates = buildCleanupCandidates();
     const estimated = estimateCleanup(candidates, candidates.map((c) => c.id));
@@ -120,6 +183,32 @@ function attachRoutes(app) {
     getDb().prepare("INSERT INTO driver_reports(devices_json, outdated_count, source) VALUES (?, ?, ?)").run(JSON.stringify(report.items), report.outdatedCount, report.source);
     logAction("drivers", "driver_check", { outdatedCount: report.outdatedCount }, { severity: "info" });
     res.json(report);
+  }));
+
+  app.get("/api/drivers/internet-status", routeGuard(async (_req, res) => {
+    const connected = await checkInternetConnection();
+    res.json({ connected });
+  }));
+
+  app.post("/api/drivers/update-item", routeGuard(async (req, res) => {
+    ensureObject(req.body, "body");
+    ensureObject(req.body.item, "item");
+    requireConfirmation(req.body, "Driver updates require explicit confirmation.");
+    const item = {
+      id: String(req.body.item.id || ""),
+      deviceName: String(req.body.item.deviceName || "Unknown driver"),
+      provider: String(req.body.item.provider || "Unknown"),
+      outdated: Boolean(req.body.item.outdated),
+      compatible: Boolean(req.body.item.compatible)
+    };
+    const updateResult = await updateSingleDriver(item, { createRestorePoint: Boolean(req.body.createRestorePoint) });
+    logAction(
+      "drivers",
+      "driver_update_item",
+      { id: item.id, status: updateResult.status, message: updateResult.message },
+      { severity: updateResult.status === "error" ? "warning" : "info", requiresConfirmation: true, confirmedByUser: true }
+    );
+    res.json({ success: updateResult.status !== "error", result: updateResult });
   }));
 
   app.get("/api/software/check", routeGuard(async (_req, res) => {

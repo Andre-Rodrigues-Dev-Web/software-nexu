@@ -65,6 +65,31 @@ The start scripts rebuild native modules for Electron automatically before openi
 npm run build:css
 ```
 
+## UI Modernization Notes
+
+- Tailwind CSS Play CDN is loaded in `renderer/index.html` for utility-first responsive composition at `sm`, `md`, `lg`, and `xl` breakpoints.
+- Feather Icons are used for flat, consistent navigation iconography.
+- Montserrat is applied as the primary typography family with heading/body hierarchy.
+
+### Custom CSS Classes
+
+- `liquid-glass`: crystal-like surfaces with `backdrop-filter`, translucent gradient background, and rounded borders.
+- `alert-list`, `alert-item`, `alert-item--warning`: standardized alert rendering with accessible contrast on dark surfaces.
+- `perf-grid`: compact grid layout for performance report cards.
+- `logs`: constrained, scrollable realtime log panel.
+- `sidebar-nav`: grouped navigation layout for clear section hierarchy.
+- `sidebar-group`, `sidebar-group__title`: semantic grouping with visual separation (16-20px between groups).
+- `nav-btn`: touch-friendly navigation item with 44px minimum interactive height.
+- `nav-btn--level-1`, `nav-btn--level-2`, `nav-btn--level-3`: progressive indentation scale for nested links.
+
+### Sidebar Nesting Examples
+
+```html
+<button class="nav-btn nav-btn--level-1">Top level</button>
+<button class="nav-btn nav-btn--level-2">Nested level 2</button>
+<button class="nav-btn nav-btn--level-3">Nested level 3</button>
+```
+
 ## Tests
 
 ```bash

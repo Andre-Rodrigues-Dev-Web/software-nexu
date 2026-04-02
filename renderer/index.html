@@ -4,17 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Velance System Care</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <script>
+      tailwind = window.tailwind || {};
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Montserrat", "ui-sans-serif", "system-ui"]
+            }
+          }
+        }
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./styles/main.css" />
   </head>
-  <body>
+  <body class="font-sans bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-slate-100">
     <div id="splash" class="splash" aria-live="polite">
       <div class="splash__brand">
         <h1>Velance System Care</h1>
         <p>Preparing secure diagnostics...</p>
       </div>
     </div>
-    <div class="app-layout">
-      <aside class="sidebar" aria-label="Main navigation">
+    <div class="app-layout grid grid-cols-1 xl:grid-cols-[280px_1fr] min-h-screen">
+      <aside class="sidebar liquid-glass" aria-label="Main navigation">
         <div class="brand">
           <div class="brand__logo">VS</div>
           <div>
@@ -22,20 +38,29 @@
             <p>System Care</p>
           </div>
         </div>
-        <nav>
-          <button data-page="dashboard" class="nav-btn is-active">Dashboard</button>
-          <button data-page="performance" class="nav-btn">Performance Analyzer</button>
-          <button data-page="security" class="nav-btn">Security Center</button>
-          <button data-page="drivers" class="nav-btn">Driver Center</button>
-          <button data-page="software" class="nav-btn">Software Updates</button>
-          <button data-page="cleanup" class="nav-btn">Cleanup Center</button>
-          <button data-page="history" class="nav-btn">Reports / History</button>
-          <button data-page="settings" class="nav-btn">Settings</button>
-          <button data-page="about" class="nav-btn">About</button>
+        <nav class="sidebar-nav" aria-label="Main navigation links">
+          <div class="sidebar-group">
+            <p class="sidebar-group__title">Core</p>
+            <button data-page="dashboard" class="nav-btn nav-btn--level-1 is-active"><i data-feather="activity"></i> Dashboard</button>
+            <button data-page="performance" class="nav-btn nav-btn--level-1"><i data-feather="bar-chart-2"></i> Performance Analyzer</button>
+            <button data-page="security" class="nav-btn nav-btn--level-1"><i data-feather="shield"></i> Security Center</button>
+          </div>
+          <div class="sidebar-group">
+            <p class="sidebar-group__title">Maintenance</p>
+            <button data-page="drivers" class="nav-btn nav-btn--level-1"><i data-feather="cpu"></i> Driver Center</button>
+            <button data-page="software" class="nav-btn nav-btn--level-1"><i data-feather="package"></i> Software Updates</button>
+            <button data-page="cleanup" class="nav-btn nav-btn--level-1"><i data-feather="trash-2"></i> Cleanup Center</button>
+          </div>
+          <div class="sidebar-group">
+            <p class="sidebar-group__title">Administration</p>
+            <button data-page="history" class="nav-btn nav-btn--level-1"><i data-feather="clock"></i> Reports / History</button>
+            <button data-page="settings" class="nav-btn nav-btn--level-1"><i data-feather="settings"></i> Settings</button>
+            <button data-page="about" class="nav-btn nav-btn--level-1"><i data-feather="info"></i> About</button>
+          </div>
         </nav>
       </aside>
-      <main class="content">
-        <header class="topbar">
+      <main class="content px-4 sm:px-6 lg:px-8 py-4">
+        <header class="topbar liquid-glass">
           <h2 id="pageTitle">Dashboard</h2>
           <span id="securityBadge" class="badge">Security: Loading</span>
         </header>
@@ -48,35 +73,84 @@
             <button id="checkSoftwareBtn">Check software updates</button>
             <button id="checkDriversBtn">Check drivers</button>
           </div>
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Usage history</h3>
             <canvas id="usageChart" width="900" height="220" aria-label="Resource usage chart"></canvas>
           </div>
         </section>
         <section id="performance" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Performance report</h3>
-            <button id="runPerformanceScanBtn">Run analysis</button>
+            <div class="row">
+              <button id="runPerformanceScanBtn">Análise geral</button>
+              <button id="runApiResponseBtn">Tempo de resposta APIs</button>
+              <button id="runMemoryMonitorBtn">Consumo de memória</button>
+              <button id="runRenderBottleneckBtn">Gargalos de renderização</button>
+              <button id="runPageLoadBtn">Tempo de carregamento</button>
+              <button id="runBundleSizeBtn">Bundle size</button>
+              <button id="runSlowComponentsBtn">Renderização lenta</button>
+              <button id="runNativeProfilerBtn">Profiling nativo</button>
+              <button id="exportPerformanceLogsBtn">Exportar logs</button>
+            </div>
+            <div class="panel liquid-glass">
+              <h4>Gráfico em tempo real</h4>
+              <canvas id="performanceRealtimeChart" width="900" height="220" aria-label="Performance realtime chart"></canvas>
+            </div>
+            <div class="panel liquid-glass">
+              <h4>Alertas de degradação</h4>
+              <div id="performanceAlerts"></div>
+            </div>
+            <div class="panel liquid-glass">
+              <h4>Histórico comparativo</h4>
+              <button id="loadPerformanceHistoryBtn">Atualizar histórico</button>
+              <div id="performanceHistory"></div>
+            </div>
             <div id="performanceReport"></div>
           </div>
         </section>
         <section id="security" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Security center</h3>
             <button id="runSecurityScanBtn">Run defensive scan</button>
             <div id="securityReport"></div>
           </div>
         </section>
         <section id="drivers" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Driver diagnostics</h3>
-            <button id="runDriverCheckBtn">Check drivers</button>
+            <div class="row">
+              <button id="runDriverCheckBtn">Verificar Atualizações</button>
+              <select id="driverCategoryFilter">
+                <option value="all">Todas categorias</option>
+                <option value="video">Vídeo</option>
+                <option value="audio">Áudio</option>
+                <option value="network">Rede</option>
+                <option value="other">Outros</option>
+              </select>
+              <label><input type="checkbox" id="driverCreateRestorePoint" /> Criar ponto de restauração</label>
+            </div>
+            <div class="row">
+              <label><input type="checkbox" id="driverSelectAll" /> Selecionar Todos</label>
+              <button id="updateSelectedDriversBtn" disabled>Atualizar Selecionados</button>
+              <button id="updateAllDriversBtn">Atualizar Todos</button>
+              <button id="cancelDriverUpdateBtn" disabled>Cancelar</button>
+            </div>
+            <div id="driverProgressWrap" class="progress-wrap hidden">
+              <p id="driverProgressLabel">Atualização de drivers em andamento...</p>
+              <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div id="driverProgressFill" class="progress-fill"></div>
+              </div>
+            </div>
             <p class="alert">Always create a restore point before applying driver updates.</p>
             <div id="driverReport"></div>
+            <div class="panel liquid-glass">
+              <h4>Log de Atualizações</h4>
+              <div id="driverUpdateLogs" class="logs"></div>
+            </div>
           </div>
         </section>
         <section id="software" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Software update assistance</h3>
             <div class="row">
               <button id="runSoftwareCheckBtn">Check installed software</button>
@@ -107,7 +181,7 @@
           </div>
         </section>
         <section id="cleanup" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Cleanup center</h3>
             <button id="loadCleanupTargetsBtn">Load cleanup targets</button>
             <form id="cleanupForm"></form>
@@ -117,7 +191,7 @@
           </div>
         </section>
         <section id="history" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Maintenance history</h3>
             <div class="row">
               <input id="historyFromDate" type="date" />
@@ -139,7 +213,7 @@
           </div>
         </section>
         <section id="settings" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>Settings</h3>
             <form id="settingsForm">
               <label>Theme
@@ -160,12 +234,24 @@
                   <option value="false">No</option>
                 </select>
               </label>
+              <label>Auto prompt software updates when pending
+                <select name="software.autoPromptUpdates">
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </label>
+              <label>Language
+                <select name="ui.language">
+                  <option value="pt-BR">Português (Brasil)</option>
+                  <option value="en-US">English (US)</option>
+                </select>
+              </label>
               <button type="submit">Save settings</button>
             </form>
           </div>
         </section>
         <section id="about" class="page">
-          <div class="panel">
+          <div class="panel liquid-glass">
             <h3>About Velance System Care</h3>
             <p>Professional defensive maintenance utility for transparent diagnostics and optimization workflows.</p>
             <p>TODO: Integrate official vendor feeds for advanced software version intelligence.</p>
@@ -175,7 +261,7 @@
       </main>
     </div>
     <div id="softwareConfirmModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="softwareModalTitle">
-      <div class="modal__card">
+      <div class="modal__card liquid-glass">
         <h3 id="softwareModalTitle">Confirm software updates</h3>
         <p id="softwareModalText"></p>
         <div class="row">
@@ -184,7 +270,19 @@
         </div>
       </div>
     </div>
+    <div id="driverConfirmModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="driverModalTitle">
+      <div class="modal__card liquid-glass">
+        <h3 id="driverModalTitle">Confirmar atualização de drivers</h3>
+        <p id="driverModalText"></p>
+        <div class="row">
+          <button id="cancelDriverConfirmBtn">Cancelar</button>
+          <button id="confirmDriverUpdateBtn">Confirmar atualização</button>
+        </div>
+      </div>
+    </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="./js/softwareModalPolicy.js"></script>
     <script src="./js/app.js"></script>
   </body>
 </html>

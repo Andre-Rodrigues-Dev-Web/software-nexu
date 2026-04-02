@@ -84,6 +84,12 @@ CREATE TABLE IF NOT EXISTS notifications (
   read_flag INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS performance_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  report_json TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 const seedSql = [
@@ -91,7 +97,11 @@ const seedSql = [
   ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "cleanup.recycleBinEnabled", "false"],
   ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "scan.quickMode", "true"],
   ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "log.retentionDays", "90"],
-  ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "critical.requireAdminConfirmation", "true"]
+  ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "critical.requireAdminConfirmation", "true"],
+  ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "software.autoPromptUpdates", "false"],
+  ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "driver.filterCategory", "all"],
+  ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "driver.createRestorePoint", "false"],
+  ["INSERT OR IGNORE INTO settings(key, value) VALUES (?, ?)", "ui.language", "pt-BR"]
 ];
 
 module.exports = {
